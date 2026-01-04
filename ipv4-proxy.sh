@@ -183,9 +183,7 @@ break_end() {
 
 # 打印三列菜单（表格样式）
 print_three_columns() {
-    local cols=$(tput cols 2>/dev/null || echo 80)
-    local col_width=$(( (cols - 6) / 3 ))
-    printf "%-${col_width}s %-${col_width}s %-${col_width}s\n" "$1" "$2" "$3"
+    echo -e "$1|$2|$3" | column -t -s'|' 2>/dev/null || printf "%-35s %-35s %-35s\n" "$1" "$2" "$3"
 }
 
 # 检查 root 权限
@@ -269,10 +267,10 @@ show_main_menu() {
     print_three_columns "${green} 1.${re} 安装服务器端 ${skyblue}(有 IPv4 的 VPS)${re}" "${green} 2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}" "${green} 3.${re} 添加客户端到服务器"
     echo ""
     echo -e "${purple}【检测查看】${re}"
-    print_three_columns "${green} 4.${re} 检测系统环境 ${skyblue}▶ 查看系统信息/软件包/配置${re}" "${green} 5.${re} 查看服务器配置 ${skyblue}▶ 公钥/端口/客户端列表/NAT${re}" "${green} 6.${re} 查看客户端配置 ${skyblue}▶ 公钥/隧道/域名/路由/连接${re}"
+    print_three_columns "${green} 4.${re} 检测系统环境" "${green} 5.${re} 查看服务器配置" "${green} 6.${re} 查看客户端配置"
     echo ""
     echo -e "${purple}【管理维护】${re}"
-    print_three_columns "${green} 7.${re} 管理分流域名 ${skyblue}▶ 添加/删除/查看${re}" "${green} 8.${re} 查看运行状态 ${skyblue}▶ WireGuard/nftables/dnsmasq${re}" "${green} 9.${re} 启动服务"
+    print_three_columns "${green} 7.${re} 管理分流域名" "${green} 8.${re} 查看运行状态" "${green} 9.${re} 启动服务"
     print_three_columns "${green}10.${re} 停止服务" "${red}11.${re} 卸载" ""
     echo ""
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
