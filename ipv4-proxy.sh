@@ -170,7 +170,8 @@ break_end() {
 
 # 打印三列菜单（表格样式）
 print_three_columns() {
-    printf "%-50s %-50s %-50s\n" "$1" "$2" "$3"
+    local col_width=35
+    printf "%-${col_width}s %-${col_width}s %-${col_width}s\n" "$1" "$2" "$3"
 }
 
 # 检查 root 权限
@@ -1560,10 +1561,10 @@ update_script() {
     if curl -fsSL "$SCRIPT_URL" -o "$TEMP_SCRIPT" 2>/dev/null; then
         log_info "下载成功"
 
-    # 获取当前脚本路径
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
-    CURRENT_SCRIPT="$SCRIPT_DIR/$SCRIPT_NAME"
+        # 获取当前脚本路径
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+        CURRENT_SCRIPT="$SCRIPT_DIR/$SCRIPT_NAME"
 
         # 比较文件
         if diff -q "$CURRENT_SCRIPT" "$TEMP_SCRIPT" >/dev/null 2>&1; then
