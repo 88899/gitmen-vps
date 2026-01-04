@@ -5,11 +5,14 @@
 set -e
 
 # 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+re='\033[0m'
+red='\033[1;91m'
+green='\033[1;32m'
+yellow='\033[1;33m'
+blue='\033[1;34m'
+purple='\033[1;35m'
+skyblue='\033[1;96m'
+white='\033[1;97m'
 
 # 配置
 WG_IF="wg0"
@@ -38,19 +41,27 @@ DEFAULT_DOMAINS=(
 
 # 日志函数
 log_info() {
-    echo -e "${GREEN}[✓]${NC} $1"
+    echo -e "${green}[✓]${re} $1"
 }
 
 log_warn() {
-    echo -e "${YELLOW}[!]${NC} $1"
+    echo -e "${yellow}[!]${re} $1"
 }
 
 log_error() {
-    echo -e "${RED}[✗]${NC} $1"
+    echo -e "${red}[✗]${re} $1"
 }
 
 log_step() {
-    echo -e "${BLUE}[→]${NC} $1"
+    echo -e "${skyblue}[→]${re} $1"
+}
+
+# 等待用户返回
+break_end() {
+    echo ""
+    echo -e "${yellow}按任意键返回主菜单...${re}"
+    read -n 1 -s -r -p "" </dev/tty
+    echo ""
 }
 
 # 检查 root 权限
@@ -118,38 +129,47 @@ detect_interface() {
 # 显示主菜单
 show_main_menu() {
     clear
-    echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║     IPv4 借用工具 - 主菜单            ║${NC}"
-    echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
-    echo
-    echo "  【安装】"
-    echo "  1) 安装服务器端（有 IPv4 的 VPS）"
-    echo "  2) 安装客户端（IPv6-only VPS）"
-    echo "  3) 添加客户端到服务器"
-    echo
-    echo "  【检测】"
-    echo "  4) 检测系统环境"
-    echo "  5) 查看服务器配置信息"
-    echo "  6) 查看客户端配置信息"
-    echo
-    echo "  【管理】"
-    echo "  7) 管理分流域名"
-    echo "  8) 查看运行状态"
-    echo "  9) 启动服务"
-    echo "  10) 停止服务"
-    echo "  11) 卸载"
-    echo
-    echo "  0) 退出"
-    echo
-    echo -n "请选择 [0-11]: "
+    echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
+    echo -e "${skyblue}  ██╗██████╗ ██╗   ██╗██╗  ██╗    ██████╗ ██████╗  ██████╗ ██╗  ██╗██╗   ██╗${re}"
+    echo -e "${skyblue}  ██║██╔══██╗██║   ██║██║  ██║    ██╔══██╗██╔══██╗██╔═══██╗╚██╗██╔╝╚██╗ ██╔╝${re}"
+    echo -e "${skyblue}  ██║██████╔╝██║   ██║███████║    ██████╔╝██████╔╝██║   ██║ ╚███╔╝  ╚████╔╝ ${re}"
+    echo -e "${skyblue}  ██║██╔═══╝ ╚██╗ ██╔╝╚════██║    ██╔═══╝ ██╔══██╗██║   ██║ ██╔██╗   ╚██╔╝  ${re}"
+    echo -e "${skyblue}  ██║██║      ╚████╔╝      ██║    ██║     ██║  ██║╚██████╔╝██╔╝ ██╗   ██║   ${re}"
+    echo -e "${skyblue}  ╚═╝╚═╝       ╚═══╝       ╚═╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ${re}"
+    echo ""
+    echo -e "                    ${yellow}IPv4 借用工具 v1.0.0${re}"
+    echo -e "        ${white}让 IPv6-only VPS 通过 WireGuard 借用 IPv4 网络${re}"
+    echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
+    echo ""
+    echo -e "${purple}【安装部署】${re}"
+    echo -e "${green} 1.${re} 安装服务器端 ${skyblue}(有 IPv4 的 VPS)${re}"
+    echo -e "${green} 2.${re} 安装客户端   ${skyblue}(IPv6-only VPS)${re}"
+    echo -e "${green} 3.${re} 添加客户端到服务器"
+    echo ""
+    echo -e "${purple}【检测查看】${re}"
+    echo -e "${green} 4.${re} 检测系统环境       ${skyblue}▶ 查看系统信息/软件包/配置${re}"
+    echo -e "${green} 5.${re} 查看服务器配置     ${skyblue}▶ 公钥/端口/客户端列表/NAT${re}"
+    echo -e "${green} 6.${re} 查看客户端配置     ${skyblue}▶ 公钥/隧道/域名/路由/连接${re}"
+    echo ""
+    echo -e "${purple}【管理维护】${re}"
+    echo -e "${green} 7.${re} 管理分流域名       ${skyblue}▶ 添加/删除/查看${re}"
+    echo -e "${green} 8.${re} 查看运行状态       ${skyblue}▶ WireGuard/nftables/dnsmasq${re}"
+    echo -e "${green} 9.${re} 启动服务"
+    echo -e "${green}10.${re} 停止服务"
+    echo -e "${red}11.${re} 卸载"
+    echo ""
+    echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
+    echo -e "${green} 0.${re} 退出脚本"
+    echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
+    echo -n -e "${red}请输入你的选择 [0-11]: ${re}"
 }
 
 # 安装服务器端
 install_server() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  安装服务器端（IPv4 出口机）${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  安装服务器端（IPv4 出口机）${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     log_step "检测系统..."
@@ -232,42 +252,42 @@ EOF
     esac
     
     echo
-    echo -e "${GREEN}════════════════════════════════════════${NC}"
-    echo -e "${GREEN}  服务器端安装完成！${NC}"
-    echo -e "${GREEN}════════════════════════════════════════${NC}"
+    echo -e "${green}════════════════════════════════════════${re}"
+    echo -e "${green}  服务器端安装完成！${re}"
+    echo -e "${green}════════════════════════════════════════${re}"
     echo
     echo "服务器公钥（请复制保存）："
-    echo -e "${YELLOW}$(cat server.pub)${NC}"
+    echo -e "${yellow}$(cat server.pub)${re}"
     echo
     echo "下一步："
     echo "1. 在客户端 VPS 上运行此脚本，选择菜单 2"
     echo "2. 获取客户端公钥后，回到本机选择菜单 3 添加客户端"
     echo
-    read -p "按回车键返回主菜单..."
+    read -p "按回车键返回主菜单..." </dev/tty
 }
 
 # 安装客户端
 install_client() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  安装客户端（IPv6-only VPS）${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  安装客户端（IPv6-only VPS）${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
-    read -p "请输入服务器的 IPv6 地址: " SERVER_IPV6
+    read -p "请输入服务器的 IPv6 地址: " SERVER_IPV6 </dev/tty
     if [ -z "$SERVER_IPV6" ]; then
         log_error "服务器 IPv6 地址不能为空"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
     SERVER_IPV6="${SERVER_IPV6#[}"
     SERVER_IPV6="${SERVER_IPV6%]}"
     
-    read -p "请输入服务器公钥: " SERVER_PUBKEY
+    read -p "请输入服务器公钥: " SERVER_PUBKEY </dev/tty
     if [ -z "$SERVER_PUBKEY" ]; then
         log_error "服务器公钥不能为空"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
@@ -392,41 +412,41 @@ EOF
     ip rule add fwmark $FW_MARK table $RT_NAME 2>/dev/null || true
     
     echo
-    echo -e "${GREEN}════════════════════════════════════════${NC}"
-    echo -e "${GREEN}  客户端安装完成！${NC}"
-    echo -e "${GREEN}════════════════════════════════════════${NC}"
+    echo -e "${green}════════════════════════════════════════${re}"
+    echo -e "${green}  客户端安装完成！${re}"
+    echo -e "${green}════════════════════════════════════════${re}"
     echo
     echo "客户端公钥（请复制保存）："
-    echo -e "${YELLOW}$(cat client.pub)${NC}"
+    echo -e "${yellow}$(cat client.pub)${re}"
     echo
     echo "下一步："
     echo "在服务器上运行此脚本，选择菜单 3，输入上面的公钥"
     echo
-    read -p "按回车键返回主菜单..."
+    read -p "按回车键返回主菜单..." </dev/tty
 }
 
 # 添加客户端到服务器
 add_client() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  添加客户端到服务器${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  添加客户端到服务器${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     if [ ! -f "$WG_DIR/wg0.conf" ]; then
         log_error "未找到服务器配置，请先安装服务器端（菜单 1）"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
-    read -p "请输入客户端公钥: " CLIENT_PUBKEY
+    read -p "请输入客户端公钥: " CLIENT_PUBKEY </dev/tty
     if [ -z "$CLIENT_PUBKEY" ]; then
         log_error "客户端公钥不能为空"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
-    read -p "请输入客户端 IP [默认: 10.66.66.2]: " CLIENT_IP
+    read -p "请输入客户端 IP [默认: 10.66.66.2]: " CLIENT_IP </dev/tty
     CLIENT_IP=${CLIENT_IP:-10.66.66.2}
     
     echo
@@ -468,16 +488,16 @@ EOF
     echo "当前连接的客户端："
     wg show wg0 peers 2>/dev/null || echo "  暂无连接"
     echo
-    read -p "按回车键返回主菜单..."
+    read -p "按回车键返回主菜单..." </dev/tty
 }
 
 # 管理域名菜单
 manage_domains() {
     while true; do
         clear
-        echo -e "${BLUE}════════════════════════════════════════${NC}"
-        echo -e "${BLUE}  管理分流域名${NC}"
-        echo -e "${BLUE}════════════════════════════════════════${NC}"
+        echo -e "${blue}════════════════════════════════════════${re}"
+        echo -e "${blue}  管理分流域名${re}"
+        echo -e "${blue}════════════════════════════════════════${re}"
         echo
         echo "  1) 查看域名列表"
         echo "  2) 添加域名"
@@ -500,14 +520,14 @@ manage_domains() {
 # 查看域名列表
 list_domains() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  当前分流域名列表${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  当前分流域名列表${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     if [ ! -f "$WG_DIR/domains.txt" ]; then
         log_error "域名列表文件不存在"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
@@ -515,27 +535,27 @@ list_domains() {
     echo
     echo "总计: $(grep -v "^#" "$WG_DIR/domains.txt" | grep -v "^$" | wc -l) 个域名"
     echo
-    read -p "按回车键返回..."
+    read -p "按回车键返回..." </dev/tty
 }
 
 # 添加域名
 add_domain() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  添加分流域名${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  添加分流域名${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     if [ ! -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
         log_error "dnsmasq 配置不存在，请先安装客户端（菜单 2）"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
-    read -p "请输入要添加的域名（多个用空格分隔）: " domains
+    read -p "请输入要添加的域名（多个用空格分隔）: " domains </dev/tty
     if [ -z "$domains" ]; then
         log_error "域名不能为空"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
@@ -564,27 +584,27 @@ add_domain() {
     
     echo
     log_info "域名添加完成！"
-    read -p "按回车键返回..."
+    read -p "按回车键返回..." </dev/tty
 }
 
 # 删除域名
 remove_domain() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  删除分流域名${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  删除分流域名${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     if [ ! -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
         log_error "dnsmasq 配置不存在"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
-    read -p "请输入要删除的域名（多个用空格分隔）: " domains
+    read -p "请输入要删除的域名（多个用空格分隔）: " domains </dev/tty
     if [ -z "$domains" ]; then
         log_error "域名不能为空"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
@@ -609,15 +629,15 @@ remove_domain() {
     
     echo
     log_info "域名删除完成！"
-    read -p "按回车键返回..."
+    read -p "按回车键返回..." </dev/tty
 }
 
 # 检测系统环境
 check_environment() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  系统环境检测${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  系统环境检测${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     # 检测操作系统
@@ -735,15 +755,15 @@ check_environment() {
     fi
     echo
     
-    read -p "按回车键返回主菜单..."
+    read -p "按回车键返回主菜单..." </dev/tty
 }
 
 # 查看服务器配置信息
 show_server_info() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  服务器配置信息${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  服务器配置信息${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     if [ ! -f "$WG_DIR/wg0.conf" ]; then
@@ -751,7 +771,7 @@ show_server_info() {
         echo
         echo "请先安装服务器端（菜单 1）"
         echo
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
@@ -759,7 +779,7 @@ show_server_info() {
     echo "【服务器信息】"
     if [ -f "$WG_DIR/server.pub" ]; then
         echo "服务器公钥:"
-        echo -e "${YELLOW}$(cat $WG_DIR/server.pub)${NC}"
+        echo -e "${yellow}$(cat $WG_DIR/server.pub)${re}"
     else
         log_warn "服务器公钥文件不存在"
     fi
@@ -835,7 +855,7 @@ show_server_info() {
     if [ -n "$DEF_IF" ]; then
         ipv6_addr=$(ip -6 addr show "$DEF_IF" 2>/dev/null | grep "inet6" | grep -v "fe80" | head -1 | awk '{print $2}' | cut -d'/' -f1)
         if [ -n "$ipv6_addr" ]; then
-            echo -e "   ${YELLOW}$ipv6_addr${NC}"
+            echo -e "   ${yellow}$ipv6_addr${re}"
         else
             echo "   无法获取（请手动查看）"
         fi
@@ -844,27 +864,27 @@ show_server_info() {
     
     echo "2. 服务器公钥:"
     if [ -f "$WG_DIR/server.pub" ]; then
-        echo -e "   ${YELLOW}$(cat $WG_DIR/server.pub)${NC}"
+        echo -e "   ${yellow}$(cat $WG_DIR/server.pub)${re}"
     fi
     echo
     
     echo "3. 监听端口:"
     if grep -q "ListenPort" "$WG_DIR/wg0.conf"; then
         port=$(grep "ListenPort" "$WG_DIR/wg0.conf" | awk '{print $3}')
-        echo -e "   ${YELLOW}$port${NC}"
+        echo -e "   ${yellow}$port${re}"
     fi
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo
     
-    read -p "按回车键返回主菜单..."
+    read -p "按回车键返回主菜单..." </dev/tty
 }
 
 # 查看客户端配置信息
 show_client_info() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  客户端配置信息${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  客户端配置信息${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     if [ ! -f "$WG_DIR/wg0.conf" ]; then
@@ -872,7 +892,7 @@ show_client_info() {
         echo
         echo "请先安装客户端（菜单 2）"
         echo
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return 1
     fi
     
@@ -880,7 +900,7 @@ show_client_info() {
     echo "【客户端信息】"
     if [ -f "$WG_DIR/client.pub" ]; then
         echo "客户端公钥（需添加到服务器）:"
-        echo -e "${YELLOW}$(cat $WG_DIR/client.pub)${NC}"
+        echo -e "${yellow}$(cat $WG_DIR/client.pub)${re}"
     else
         log_warn "客户端公钥文件不存在"
     fi
@@ -984,34 +1004,34 @@ show_client_info() {
         echo -n "测试 IPv4 出口... "
         ipv4=$(timeout 5 curl -4 -s ip.sb 2>/dev/null)
         if [ -n "$ipv4" ]; then
-            echo -e "${GREEN}成功${NC}"
+            echo -e "${green}成功${re}"
             echo "  IPv4 地址: $ipv4"
         else
-            echo -e "${RED}失败${NC}"
+            echo -e "${red}失败${re}"
         fi
         
         echo -n "测试 IPv6 出口... "
         ipv6=$(timeout 5 curl -6 -s ip.sb 2>/dev/null)
         if [ -n "$ipv6" ]; then
-            echo -e "${GREEN}成功${NC}"
+            echo -e "${green}成功${re}"
             echo "  IPv6 地址: $ipv6"
         else
-            echo -e "${YELLOW}无 IPv6${NC}"
+            echo -e "${yellow}无 IPv6${re}"
         fi
     else
         log_warn "curl 未安装，跳过测试"
     fi
     echo
     
-    read -p "按回车键返回主菜单..."
+    read -p "按回车键返回主菜单..." </dev/tty
 }
 
 # 查看状态
 show_status() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  系统状态${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  系统状态${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     echo "【WireGuard 状态】"
@@ -1060,15 +1080,15 @@ show_status() {
     fi
     
     echo
-    read -p "按回车键返回主菜单..."
+    read -p "按回车键返回主菜单..." </dev/tty
 }
 
 # 启动服务
 start_service() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  启动服务${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  启动服务${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     detect_os >/dev/null 2>&1
@@ -1114,15 +1134,15 @@ start_service() {
     
     echo
     log_info "服务启动完成！"
-    read -p "按回车键返回主菜单..."
+    read -p "按回车键返回主菜单..." </dev/tty
 }
 
 # 停止服务
 stop_service() {
     clear
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  停止服务${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  停止服务${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
     echo
     
     detect_os >/dev/null 2>&1
@@ -1153,23 +1173,23 @@ stop_service() {
     
     echo
     log_info "服务停止完成！"
-    read -p "按回车键返回主菜单..."
+    read -p "按回车键返回主菜单..." </dev/tty
 }
 
 # 卸载
 uninstall() {
     clear
-    echo -e "${RED}════════════════════════════════════════${NC}"
-    echo -e "${RED}  卸载 IPv4 借用工具${NC}"
-    echo -e "${RED}════════════════════════════════════════${NC}"
+    echo -e "${red}════════════════════════════════════════${re}"
+    echo -e "${red}  卸载 IPv4 借用工具${re}"
+    echo -e "${red}════════════════════════════════════════${re}"
     echo
     log_warn "此操作将完全卸载所有配置"
     echo
-    read -p "确认继续？(yes/no): " confirm
+    read -p "确认继续？(yes/no): " confirm </dev/tty
     
     if [ "$confirm" != "yes" ]; then
         log_info "取消卸载"
-        read -p "按回车键返回..."
+        read -p "按回车键返回..." </dev/tty
         return
     fi
     
@@ -1196,13 +1216,13 @@ uninstall() {
     rm -f /etc/dnsmasq.d/wg-ipv4.conf
     rm -f /etc/sysctl.d/99-wg-ipv4.conf
     
-    read -p "是否删除 WireGuard 配置和密钥？(yes/no): " del_wg
+    read -p "是否删除 WireGuard 配置和密钥？(yes/no): " del_wg </dev/tty
     if [ "$del_wg" = "yes" ]; then
         rm -rf "$WG_DIR"
         log_info "WireGuard 配置已删除"
     fi
     
-    read -p "是否删除 nftables 配置？(yes/no): " del_nft
+    read -p "是否删除 nftables 配置？(yes/no): " del_nft </dev/tty
     if [ "$del_nft" = "yes" ]; then
         rm -f /etc/nftables.conf
         nft flush ruleset 2>/dev/null || true
@@ -1216,7 +1236,7 @@ uninstall() {
     
     echo
     log_info "卸载完成！"
-    read -p "按回车键退出..."
+    read -p "按回车键退出..." </dev/tty
     exit 0
 }
 
@@ -1226,7 +1246,7 @@ main() {
     
     while true; do
         show_main_menu
-        read choice
+        read choice </dev/tty
         
         case $choice in
             1) install_server ;;

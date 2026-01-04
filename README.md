@@ -1,62 +1,38 @@
-# VPS 网络工具集
-
-一键式 shell 脚本工具集，用于解决 VPS 网络配置问题。
-
-## 模块
-
-### 1. IPv4 借用模块 (ipv4-proxy)
-
-让没有 IPv4 的 VPS 通过 WireGuard 隧道借用其他 VPS 的 IPv4 网络访问能力。
-
-**特性：**
-- 基于 WireGuard + nftables 实现
-- 域名级别智能分流
-- 自动维护 IP 集合
-- 策略路由，不影响默认流量
-
-**使用方法：**
-```bash
-# 在有 IPv4 的 VPS（出口机）上执行
-./modules/ipv4-proxy/server-setup.sh
-
-# 在 IPv6-only VPS（客户端）上执行
-./modules/ipv4-proxy/client-setup.sh
-```
-
-详细文档见：[modules/ipv4-proxy/README.md](modules/ipv4-proxy/README.md)
-
-## 项目结构
-
-```
-.
-├── modules/              # 功能模块目录
-│   └── ipv4-proxy/      # IPv4 借用模块
-├── lib/                 # 公共库函数
-└── README.md           # 项目说明
-```
-
-## 系统要求
-
-- Debian 12 或更高版本
-- root 权限
-
-## 许可证
-
-MIT
 # IPv4 借用工具
 
 让 IPv6-only VPS 通过 WireGuard 隧道借用其他 VPS 的 IPv4 访问能力。
 
 ## 快速开始
 
+### 推荐方式：下载后执行
+
 ```bash
 # 下载脚本
-wget https://raw.githubusercontent.com/xxx/ipv4-proxy.sh
+wget https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh
+# 或使用 curl
+# curl -O https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh
+
+# 添加执行权限
 chmod +x ipv4-proxy.sh
 
 # 运行（需要 root 权限）
-./ipv4-proxy.sh
+sudo ./ipv4-proxy.sh
 ```
+
+### 方式二：一键执行
+
+```bash
+# 直接下载并运行（需要 root 权限）
+curl -fsSL https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh | sudo bash
+```
+
+或使用 wget：
+
+```bash
+wget -qO- https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh | sudo bash
+```
+
+> **注意**：一键执行方式需要确保系统支持从 `/dev/tty` 读取输入
 
 ## 功能菜单
 
@@ -65,7 +41,7 @@ chmod +x ipv4-proxy.sh
 - **菜单 2**：在 IPv6-only VPS 上安装客户端
 - **菜单 3**：将客户端添加到服务器（在服务器上操作）
 
-### 检测功能（新增）
+### 检测功能
 - **菜单 4**：检测系统环境
   - 操作系统信息
   - 网络接口和 IP 地址
@@ -161,3 +137,7 @@ chmod +x ipv4-proxy.sh
 - ✅ 域名级别智能分流
 - ✅ 彩色日志输出
 - ✅ 完善的错误处理
+
+## 许可证
+
+MIT
