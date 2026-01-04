@@ -16,3 +16,5 @@
 *.tmp
 *.swp
 *~
+.history
+.DS_Store

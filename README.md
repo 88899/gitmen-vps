@@ -34,6 +34,24 @@ wget -qO- https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh 
 
 > **注意**：一键执行方式需要确保系统支持从 `/dev/tty` 读取输入
 
+### 方式三：命令行模式（自动化）
+
+脚本支持命令行参数，可以实现自动化部署：
+
+```bash
+# 查看帮助
+./ipv4-proxy.sh --help
+
+# 安装服务器端
+sudo ./ipv4-proxy.sh --install-server
+
+# 安装客户端（需要服务器 IPv6 地址和公钥）
+sudo ./ipv4-proxy.sh --install-client 2001:db8::1 abc123...
+
+# 添加客户端到服务器
+sudo ./ipv4-proxy.sh --add-client def456... [10.66.66.3]
+```
+
 ## 功能菜单
 
 ### 安装功能
@@ -74,6 +92,10 @@ wget -qO- https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh 
 - **菜单 9**：启动服务
 - **菜单 10**：停止服务
 - **菜单 11**：完全卸载
+
+### 其他功能
+- **菜单 99**：更新脚本到最新版本
+- **菜单 0**：退出脚本
 
 ## 使用流程
 
@@ -137,6 +159,18 @@ wget -qO- https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh 
 - ✅ 域名级别智能分流
 - ✅ 彩色日志输出
 - ✅ 完善的错误处理
+- ✅ 一键更新脚本
+
+## 更新脚本
+
+在脚本主菜单中选择 `99` 即可自动更新到最新版本。
+
+或手动更新：
+```bash
+# 重新下载最新版本
+wget -O ipv4-proxy.sh https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh
+chmod +x ipv4-proxy.sh
+```
 
 ## 许可证
 

@@ -4,6 +4,110 @@
 
 set -e
 
+# 参数解析
+if [ $# -gt 0 ]; then
+    case $1 in
+        --install-server)
+            check_root
+            install_server
+            exit $?
+            ;;
+        --install-client)
+            if [ $# -lt 3 ]; then
+                echo "Usage: $0 --install-client <server_ipv6> <server_pubkey>"
+                exit 1
+            fi
+            check_root
+            install_client_auto "$2" "$3"
+            exit $?
+            ;;
+        --add-client)
+            if [ $# -lt 2 ]; then
+                echo "Usage: $0 --add-client <client_pubkey> [client_ip]"
+                exit 1
+            fi
+            check_root
+            add_client_auto "$2" "${3:-10.66.66.2}"
+            exit $?
+            ;;
+        --check-env)
+            check_root
+            check_environment
+            exit $?
+            ;;
+        --show-server)
+            check_root
+            show_server_info
+            exit $?
+            ;;
+        --show-client)
+            check_root
+            show_client_info
+            exit $?
+            ;;
+        --manage-domains)
+            check_root
+            manage_domains
+            exit $?
+            ;;
+        --show-status)
+            check_root
+            show_status
+            exit $?
+            ;;
+        --start)
+            check_root
+            start_service
+            exit $?
+            ;;
+        --stop)
+            check_root
+            stop_service
+            exit $?
+            ;;
+        --uninstall)
+            check_root
+            uninstall
+            exit $?
+            ;;
+        --update)
+            check_root
+            update_script
+            exit $?
+            ;;
+        --help)
+            echo "IPv4 代理工具 - 命令行模式"
+            echo "Usage: $0 [option] [args...]"
+            echo ""
+            echo "安装选项:"
+            echo "  --install-server                 在有 IPv4 的 VPS 上安装服务器端"
+            echo "  --install-client <ipv6> <pubkey> 在 IPv6-only VPS 上安装客户端"
+            echo "  --add-client <pubkey> [ip]       将客户端添加到服务器"
+            echo ""
+            echo "管理选项:"
+            echo "  --check-env                      检测系统环境"
+            echo "  --show-server                    查看服务器配置"
+            echo "  --show-client                    查看客户端配置"
+            echo "  --manage-domains                 管理分流域名"
+            echo "  --show-status                    查看运行状态"
+            echo "  --start                          启动服务"
+            echo "  --stop                           停止服务"
+            echo "  --uninstall                      卸载"
+            echo "  --update                         更新脚本"
+            echo ""
+            echo "其他:"
+            echo "  --help                           显示此帮助信息"
+            echo "  (无参数)                         进入交互式菜单"
+            exit 0
+            ;;
+        *)
+            echo "未知选项: $1"
+            echo "使用 --help 查看帮助"
+            exit 1
+            ;;
+    esac
+fi
+
 # 颜色定义
 re='\033[0m'
 red='\033[1;91m'
@@ -85,7 +189,7 @@ detect_os() {
         log_error "无法检测操作系统"
         exit 1
     fi
-    
+
     case $OS in
         debian|ubuntu)
             PKG_MANAGER="apt"
@@ -104,7 +208,7 @@ detect_os() {
 # 安装软件包
 install_packages() {
     local packages="$1"
-    
+
     case $PKG_MANAGER in
         apt)
             log_step "更新软件包列表..."
@@ -142,26 +246,19 @@ show_main_menu() {
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo ""
     echo -e "${purple}【安装部署】${re}"
-    echo -e "${green} 1.${re} 安装服务器端 ${skyblue}(有 IPv4 的 VPS)${re}"
-    echo -e "${green} 2.${re} 安装客户端   ${skyblue}(IPv6-only VPS)${re}"
-    echo -e "${green} 3.${re} 添加客户端到服务器"
+    echo -e "${green} 1.${re} 安装服务器端 ${skyblue}(有 IPv4 的 VPS)${re}                    ${green} 2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}                    ${green} 3.${re} 添加客户端到服务器"
     echo ""
     echo -e "${purple}【检测查看】${re}"
-    echo -e "${green} 4.${re} 检测系统环境       ${skyblue}▶ 查看系统信息/软件包/配置${re}"
-    echo -e "${green} 5.${re} 查看服务器配置     ${skyblue}▶ 公钥/端口/客户端列表/NAT${re}"
-    echo -e "${green} 6.${re} 查看客户端配置     ${skyblue}▶ 公钥/隧道/域名/路由/连接${re}"
+    echo -e "${green} 4.${re} 检测系统环境 ${skyblue}▶ 查看系统信息/软件包/配置${re}    ${green} 5.${re} 查看服务器配置 ${skyblue}▶ 公钥/端口/客户端列表/NAT${re}    ${green} 6.${re} 查看客户端配置 ${skyblue}▶ 公钥/隧道/域名/路由/连接${re}"
     echo ""
     echo -e "${purple}【管理维护】${re}"
-    echo -e "${green} 7.${re} 管理分流域名       ${skyblue}▶ 添加/删除/查看${re}"
-    echo -e "${green} 8.${re} 查看运行状态       ${skyblue}▶ WireGuard/nftables/dnsmasq${re}"
-    echo -e "${green} 9.${re} 启动服务"
-    echo -e "${green}10.${re} 停止服务"
-    echo -e "${red}11.${re} 卸载"
+    echo -e "${green} 7.${re} 管理分流域名 ${skyblue}▶ 添加/删除/查看${re}                ${green} 8.${re} 查看运行状态 ${skyblue}▶ WireGuard/nftables/dnsmasq${re}        ${green} 9.${re} 启动服务"
+    echo -e "${green}10.${re} 停止服务                                        ${red}11.${re} 卸载"
     echo ""
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
-    echo -e "${green} 0.${re} 退出脚本"
+    echo -e "${green} 0.${re} 退出脚本                                        ${skyblue}99.${re} 更新脚本"
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
-    echo -n -e "${red}请输入你的选择 [0-11]: ${re}"
+    echo -n -e "${red}请输入你的选择 [0-11/99]: ${re}"
 }
 
 # 安装服务器端
@@ -171,17 +268,17 @@ install_server() {
     echo -e "${blue}  安装服务器端（IPv4 出口机）${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     log_step "检测系统..."
     detect_os
     log_info "操作系统: $OS $OS_VERSION"
-    
+
     install_packages "wireguard-tools nftables iproute2"
-    
+
     log_step "启用 IPv4 转发..."
     echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-wg-ipv4.conf
     sysctl -p /etc/sysctl.d/99-wg-ipv4.conf >/dev/null 2>&1
-    
+
     log_step "检测网络接口..."
     DEF_IF=$(detect_interface)
     if [ -z "$DEF_IF" ]; then
@@ -189,10 +286,10 @@ install_server() {
         return 1
     fi
     log_info "默认接口: $DEF_IF"
-    
+
     mkdir -p "$WG_DIR"
     cd "$WG_DIR"
-    
+
     if [ ! -f server.key ]; then
         log_step "生成 WireGuard 密钥..."
         wg genkey | tee server.key | wg pubkey > server.pub
@@ -200,9 +297,9 @@ install_server() {
     else
         log_warn "密钥已存在，跳过生成"
     fi
-    
+
     SERVER_KEY=$(cat server.key)
-    
+
     log_step "创建 WireGuard 配置..."
     cat > wg0.conf <<EOF
 [Interface]
@@ -213,7 +310,7 @@ PrivateKey = $SERVER_KEY
 # 客户端配置将通过菜单选项 3 添加
 EOF
     chmod 600 wg0.conf
-    
+
     log_step "配置 nftables NAT..."
     cat > /etc/nftables.conf <<EOF
 #!/usr/sbin/nft -f
@@ -226,7 +323,7 @@ table inet wg_nat {
 }
 EOF
     chmod 755 /etc/nftables.conf
-    
+
     # 启动 nftables
     case $OS in
         debian|ubuntu)
@@ -237,7 +334,7 @@ EOF
             rc-service nftables start >/dev/null 2>&1
             ;;
     esac
-    
+
     log_step "启动 WireGuard..."
     case $OS in
         debian|ubuntu)
@@ -250,7 +347,7 @@ EOF
             rc-service wg-quick.$WG_IF start >/dev/null 2>&1
             ;;
     esac
-    
+
     echo
     echo -e "${green}════════════════════════════════════════${re}"
     echo -e "${green}  服务器端安装完成！${re}"
@@ -273,34 +370,34 @@ install_client() {
     echo -e "${blue}  安装客户端（IPv6-only VPS）${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     read -p "请输入服务器的 IPv6 地址: " SERVER_IPV6 </dev/tty
     if [ -z "$SERVER_IPV6" ]; then
         log_error "服务器 IPv6 地址不能为空"
         break_end
         return 1
     fi
-    
+
     SERVER_IPV6="${SERVER_IPV6#[}"
     SERVER_IPV6="${SERVER_IPV6%]}"
-    
+
     read -p "请输入服务器公钥: " SERVER_PUBKEY </dev/tty
     if [ -z "$SERVER_PUBKEY" ]; then
         log_error "服务器公钥不能为空"
         break_end
         return 1
     fi
-    
+
     echo
     log_step "检测系统..."
     detect_os
     log_info "操作系统: $OS $OS_VERSION"
-    
+
     install_packages "wireguard-tools nftables dnsmasq iproute2"
-    
+
     mkdir -p "$WG_DIR"
     cd "$WG_DIR"
-    
+
     if [ ! -f client.key ]; then
         log_step "生成 WireGuard 密钥..."
         wg genkey | tee client.key | wg pubkey > client.pub
@@ -308,9 +405,9 @@ install_client() {
     else
         log_warn "密钥已存在，跳过生成"
     fi
-    
+
     CLIENT_KEY=$(cat client.key)
-    
+
     log_step "创建 WireGuard 配置..."
     cat > wg0.conf <<EOF
 [Interface]
@@ -324,12 +421,12 @@ AllowedIPs = 0.0.0.0/0
 PersistentKeepalive = 25
 EOF
     chmod 600 wg0.conf
-    
+
     log_step "配置策略路由..."
     if ! grep -q "$RT_NAME" /etc/iproute2/rt_tables; then
         echo "$RT_TABLE $RT_NAME" >> /etc/iproute2/rt_tables
     fi
-    
+
     log_step "配置 nftables..."
     cat > /etc/nftables.conf <<EOF
 #!/usr/sbin/nft -f
@@ -346,7 +443,7 @@ table inet $NFT_TABLE {
 }
 EOF
     chmod 755 /etc/nftables.conf
-    
+
     # 启动 nftables
     case $OS in
         debian|ubuntu)
@@ -357,17 +454,17 @@ EOF
             rc-service nftables start >/dev/null 2>&1
             ;;
     esac
-    
+
     log_step "配置 dnsmasq..."
     mkdir -p /etc/dnsmasq.d
     cat > /etc/dnsmasq.d/wg-ipv4.conf <<EOF
 # IPv4 分流域名配置
 EOF
-    
+
     for domain in "${DEFAULT_DOMAINS[@]}"; do
         echo "nftset=/${domain}/inet#${NFT_TABLE}#${NFT_SET}" >> /etc/dnsmasq.d/wg-ipv4.conf
     done
-    
+
     # 创建域名列表
     cat > "$WG_DIR/domains.txt" <<EOF
 # IPv4 分流域名列表（每行一个）
@@ -375,7 +472,7 @@ EOF
     for domain in "${DEFAULT_DOMAINS[@]}"; do
         echo "$domain" >> "$WG_DIR/domains.txt"
     done
-    
+
     log_step "配置 DNS..."
     case $OS in
         debian|ubuntu)
@@ -393,7 +490,7 @@ EOF
             rc-service dnsmasq start >/dev/null 2>&1
             ;;
     esac
-    
+
     log_step "启动 WireGuard..."
     case $OS in
         debian|ubuntu)
@@ -406,11 +503,11 @@ EOF
             ;;
     esac
     sleep 2
-    
+
     log_step "设置策略路由..."
     ip route replace default dev $WG_IF table $RT_NAME 2>/dev/null || true
     ip rule add fwmark $FW_MARK table $RT_NAME 2>/dev/null || true
-    
+
     echo
     echo -e "${green}════════════════════════════════════════${re}"
     echo -e "${green}  客户端安装完成！${re}"
@@ -425,6 +522,151 @@ EOF
     break_end
 }
 
+# 自动安装客户端（命令行模式）
+install_client_auto() {
+    SERVER_IPV6=$1
+    SERVER_PUBKEY=$2
+
+    SERVER_IPV6="${SERVER_IPV6#[}"
+    SERVER_IPV6="${SERVER_IPV6%]}"
+
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  自动安装客户端（IPv6-only VPS）${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo
+
+    log_step "检测系统..."
+    detect_os
+    log_info "操作系统: $OS $OS_VERSION"
+
+    install_packages "wireguard-tools nftables dnsmasq iproute2"
+
+    mkdir -p "$WG_DIR"
+    cd "$WG_DIR"
+
+    if [ ! -f client.key ]; then
+        log_step "生成 WireGuard 密钥..."
+        wg genkey | tee client.key | wg pubkey > client.pub
+        chmod 600 client.key
+    else
+        log_warn "密钥已存在，跳过生成"
+    fi
+
+    CLIENT_KEY=$(cat client.key)
+
+    log_step "创建 WireGuard 配置..."
+    cat > wg0.conf <<EOF
+[Interface]
+PrivateKey = $CLIENT_KEY
+Address = $WG_CLIENT_IP
+
+[Peer]
+PublicKey = $SERVER_PUBKEY
+Endpoint = [${SERVER_IPV6}]:${WG_PORT}
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25
+EOF
+    chmod 600 wg0.conf
+
+    log_step "配置策略路由..."
+    if ! grep -q "$RT_NAME" /etc/iproute2/rt_tables; then
+        echo "$RT_TABLE $RT_NAME" >> /etc/iproute2/rt_tables
+    fi
+
+    log_step "配置 nftables..."
+    cat > /etc/nftables.conf <<EOF
+#!/usr/sbin/nft -f
+flush ruleset
+table inet $NFT_TABLE {
+  set $NFT_SET {
+    type ipv4_addr
+    flags interval
+  }
+  chain output {
+    type route hook output priority mangle;
+    ip daddr @$NFT_SET meta mark set $FW_MARK
+  }
+}
+EOF
+    chmod 755 /etc/nftables.conf
+
+    # 启动 nftables
+    case $OS in
+        debian|ubuntu)
+            systemctl enable nftables --now >/dev/null 2>&1
+            ;;
+        alpine)
+            rc-update add nftables default >/dev/null 2>&1
+            rc-service nftables start >/dev/null 2>&1
+            ;;
+    esac
+
+    log_step "配置 dnsmasq..."
+    mkdir -p /etc/dnsmasq.d
+    cat > /etc/dnsmasq.d/wg-ipv4.conf <<EOF
+# IPv4 分流域名配置
+EOF
+
+    for domain in "${DEFAULT_DOMAINS[@]}"; do
+        echo "nftset=/${domain}/inet#${NFT_TABLE}#${NFT_SET}" >> /etc/dnsmasq.d/wg-ipv4.conf
+    done
+
+    # 创建域名列表
+    cat > "$WG_DIR/domains.txt" <<EOF
+# IPv4 分流域名列表（每行一个）
+EOF
+    for domain in "${DEFAULT_DOMAINS[@]}"; do
+        echo "$domain" >> "$WG_DIR/domains.txt"
+    done
+
+    log_step "配置 DNS..."
+    case $OS in
+        debian|ubuntu)
+            # 处理 systemd-resolved 冲突
+            if [ -f /etc/systemd/resolved.conf ]; then
+                sed -i 's/^#\?DNSStubListener=.*/DNSStubListener=no/' /etc/systemd/resolved.conf
+                systemctl restart systemd-resolved >/dev/null 2>&1
+                ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf 2>/dev/null || true
+            fi
+            systemctl enable dnsmasq --now >/dev/null 2>&1
+            ;;
+        alpine)
+            # Alpine 使用 OpenRC
+            rc-update add dnsmasq default >/dev/null 2>&1
+            rc-service dnsmasq start >/dev/null 2>&1
+            ;;
+    esac
+
+    log_step "启动 WireGuard..."
+    case $OS in
+        debian|ubuntu)
+            systemctl enable wg-quick@$WG_IF --now >/dev/null 2>&1
+            ;;
+        alpine)
+            ln -sf /etc/init.d/wg-quick /etc/init.d/wg-quick.$WG_IF 2>/dev/null || true
+            rc-update add wg-quick.$WG_IF default >/dev/null 2>&1
+            rc-service wg-quick.$WG_IF start >/dev/null 2>&1
+            ;;
+    esac
+    sleep 2
+
+    log_step "设置策略路由..."
+    ip route replace default dev $WG_IF table $RT_NAME 2>/dev/null || true
+    ip rule add fwmark $FW_MARK table $RT_NAME 2>/dev/null || true
+
+    echo
+    echo -e "${green}════════════════════════════════════════${re}"
+    echo -e "${green}  客户端安装完成！${re}"
+    echo -e "${green}════════════════════════════════════════${re}"
+    echo
+    echo "客户端公钥（请复制保存）："
+    echo -e "${yellow}$(cat client.pub)${re}"
+    echo
+    echo "下一步："
+    echo "在服务器上运行此脚本，选择菜单 3，输入上面的公钥"
+    echo
+}
+
 # 添加客户端到服务器
 add_client() {
     clear
@@ -432,39 +674,39 @@ add_client() {
     echo -e "${blue}  添加客户端到服务器${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     if [ ! -f "$WG_DIR/wg0.conf" ]; then
         log_error "未找到服务器配置，请先安装服务器端（菜单 1）"
         break_end
         return 1
     fi
-    
+
     read -p "请输入客户端公钥: " CLIENT_PUBKEY </dev/tty
     if [ -z "$CLIENT_PUBKEY" ]; then
         log_error "客户端公钥不能为空"
         break_end
         return 1
     fi
-    
+
     read -p "请输入客户端 IP [默认: 10.66.66.2]: " CLIENT_IP </dev/tty
     CLIENT_IP=${CLIENT_IP:-10.66.66.2}
-    
+
     echo
     log_step "添加客户端配置..."
-    
+
     if grep -q "$CLIENT_PUBKEY" "$WG_DIR/wg0.conf"; then
         log_warn "客户端已存在，更新配置..."
         # 删除包含该公钥的 Peer 块
         sed -i "/\[Peer\]/,/AllowedIPs.*$/{ /PublicKey = ${CLIENT_PUBKEY}/,/AllowedIPs.*$/d; }" "$WG_DIR/wg0.conf" 2>/dev/null || true
     fi
-    
+
     cat >> "$WG_DIR/wg0.conf" <<EOF
 
 [Peer]
 PublicKey = $CLIENT_PUBKEY
 AllowedIPs = ${CLIENT_IP}/32
 EOF
-    
+
     log_step "重新加载配置..."
     # 检查 WireGuard 是否运行
     if wg show wg0 >/dev/null 2>&1; then
@@ -481,7 +723,7 @@ EOF
     else
         log_warn "WireGuard 未运行，请先启动服务（菜单 6）"
     fi
-    
+
     echo
     log_info "客户端添加成功！"
     echo
@@ -489,6 +731,62 @@ EOF
     wg show wg0 peers 2>/dev/null || echo "  暂无连接"
     echo
     break_end
+}
+
+# 自动添加客户端到服务器（命令行模式）
+add_client_auto() {
+    CLIENT_PUBKEY=$1
+    CLIENT_IP=$2
+
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo -e "${blue}  自动添加客户端到服务器${re}"
+    echo -e "${blue}════════════════════════════════════════${re}"
+    echo
+
+    if [ ! -f "$WG_DIR/wg0.conf" ]; then
+        log_error "未找到服务器配置，请先安装服务器端"
+        return 1
+    fi
+
+    echo
+    log_step "添加客户端配置..."
+
+    if grep -q "$CLIENT_PUBKEY" "$WG_DIR/wg0.conf"; then
+        log_warn "客户端已存在，更新配置..."
+        # 删除包含该公钥的 Peer 块
+        sed -i "/\[Peer\]/,/AllowedIPs.*$/{ /PublicKey = ${CLIENT_PUBKEY}/,/AllowedIPs.*$/d; }" "$WG_DIR/wg0.conf" 2>/dev/null || true
+    fi
+
+    cat >> "$WG_DIR/wg0.conf" <<EOF
+
+[Peer]
+PublicKey = $CLIENT_PUBKEY
+AllowedIPs = ${CLIENT_IP}/32
+EOF
+
+    log_step "重新加载配置..."
+    # 检查 WireGuard 是否运行
+    if wg show wg0 >/dev/null 2>&1; then
+        wg syncconf wg0 <(wg-quick strip wg0) 2>/dev/null || {
+            case $OS in
+                debian|ubuntu)
+                    systemctl restart wg-quick@wg0 2>/dev/null
+                    ;;
+                alpine)
+                    rc-service wg-quick.$WG_IF restart 2>/dev/null
+                    ;;
+            esac
+        }
+    else
+        log_warn "WireGuard 未运行，请先启动服务"
+    fi
+
+    echo
+    log_info "客户端添加成功！"
+    echo
+    echo "当前连接的客户端："
+    wg show wg0 peers 2>/dev/null || echo "  暂无连接"
+    echo
 }
 
 # 管理域名菜单
@@ -506,7 +804,7 @@ manage_domains() {
         echo
         echo -n "请选择 [0-3]: "
         read choice
-        
+
         case $choice in
             1) list_domains ;;
             2) add_domain ;;
@@ -524,13 +822,13 @@ list_domains() {
     echo -e "${blue}  当前分流域名列表${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     if [ ! -f "$WG_DIR/domains.txt" ]; then
         log_error "域名列表文件不存在"
         break_end
         return 1
     fi
-    
+
     grep -v "^#" "$WG_DIR/domains.txt" | grep -v "^$" | nl
     echo
     echo "总计: $(grep -v "^#" "$WG_DIR/domains.txt" | grep -v "^$" | wc -l) 个域名"
@@ -545,32 +843,32 @@ add_domain() {
     echo -e "${blue}  添加分流域名${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     if [ ! -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
         log_error "dnsmasq 配置不存在，请先安装客户端（菜单 2）"
         break_end
         return 1
     fi
-    
+
     read -p "请输入要添加的域名（多个用空格分隔）: " domains </dev/tty
     if [ -z "$domains" ]; then
         log_error "域名不能为空"
         break_end
         return 1
     fi
-    
+
     echo
     for domain in $domains; do
         if grep -q "nftset=/${domain}/" /etc/dnsmasq.d/wg-ipv4.conf; then
             log_warn "域名 $domain 已存在，跳过"
             continue
         fi
-        
+
         log_info "添加域名: $domain"
         echo "nftset=/${domain}/inet#${NFT_TABLE}#${NFT_SET}" >> /etc/dnsmasq.d/wg-ipv4.conf
         echo "$domain" >> "$WG_DIR/domains.txt"
     done
-    
+
     detect_os >/dev/null 2>&1
     log_step "重启 dnsmasq..."
     case $OS in
@@ -581,7 +879,7 @@ add_domain() {
             rc-service dnsmasq restart
             ;;
     esac
-    
+
     echo
     log_info "域名添加完成！"
     break_end
@@ -594,20 +892,20 @@ remove_domain() {
     echo -e "${blue}  删除分流域名${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     if [ ! -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
         log_error "dnsmasq 配置不存在"
         break_end
         return 1
     fi
-    
+
     read -p "请输入要删除的域名（多个用空格分隔）: " domains </dev/tty
     if [ -z "$domains" ]; then
         log_error "域名不能为空"
         break_end
         return 1
     fi
-    
+
     echo
     for domain in $domains; do
         # 转义特殊字符
@@ -616,7 +914,7 @@ remove_domain() {
         sed -i "/nftset=\/${escaped_domain}\//d" /etc/dnsmasq.d/wg-ipv4.conf
         sed -i "/^${escaped_domain}$/d" "$WG_DIR/domains.txt" 2>/dev/null || true
     done
-    
+
     log_step "重启 dnsmasq..."
     case $OS in
         debian|ubuntu)
@@ -626,7 +924,7 @@ remove_domain() {
             rc-service dnsmasq restart
             ;;
     esac
-    
+
     echo
     log_info "域名删除完成！"
     break_end
@@ -639,7 +937,7 @@ check_environment() {
     echo -e "${blue}  系统环境检测${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     # 检测操作系统
     echo "【操作系统】"
     detect_os 2>/dev/null || true
@@ -650,13 +948,13 @@ check_environment() {
         log_error "无法检测操作系统"
     fi
     echo
-    
+
     # 检测网络接口
     echo "【网络接口】"
     DEF_IF=$(detect_interface)
     if [ -n "$DEF_IF" ]; then
         log_info "默认接口: $DEF_IF"
-        
+
         # 显示接口 IP 地址
         if command -v ip >/dev/null 2>&1; then
             echo "  IPv4 地址:"
@@ -668,7 +966,7 @@ check_environment() {
         log_warn "无法检测默认网络接口"
     fi
     echo
-    
+
     # 检测已安装的软件
     echo "【软件包检测】"
     packages=("wireguard" "wireguard-tools" "nftables" "dnsmasq" "iproute2" "curl")
@@ -690,7 +988,7 @@ check_environment() {
         fi
     done
     echo
-    
+
     # 检测现有配置
     echo "【现有配置】"
     if [ -f "$WG_DIR/wg0.conf" ]; then
@@ -702,13 +1000,13 @@ check_environment() {
     else
         log_warn "WireGuard 配置: 不存在"
     fi
-    
+
     if [ -f /etc/nftables.conf ]; then
         log_info "nftables 配置: 已存在"
     else
         log_warn "nftables 配置: 不存在"
     fi
-    
+
     if [ -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
         log_info "dnsmasq 配置: 已存在"
         domain_count=$(grep -c "^nftset=" /etc/dnsmasq.d/wg-ipv4.conf 2>/dev/null || echo 0)
@@ -717,7 +1015,7 @@ check_environment() {
         log_warn "dnsmasq 配置: 不存在"
     fi
     echo
-    
+
     # 检测防火墙端口
     echo "【防火墙/端口】"
     if command -v ss >/dev/null 2>&1; then
@@ -736,7 +1034,7 @@ check_environment() {
         log_warn "无法检测端口状态（ss/netstat 未安装）"
     fi
     echo
-    
+
     # 检测 IPv4 转发
     echo "【系统配置】"
     if [ -f /proc/sys/net/ipv4/ip_forward ]; then
@@ -747,14 +1045,14 @@ check_environment() {
             log_warn "IPv4 转发: 未启用"
         fi
     fi
-    
+
     if grep -q "$RT_NAME" /etc/iproute2/rt_tables 2>/dev/null; then
         log_info "策略路由表: 已配置"
     else
         log_warn "策略路由表: 未配置"
     fi
     echo
-    
+
     break_end
 }
 
@@ -765,7 +1063,7 @@ show_server_info() {
     echo -e "${blue}  服务器配置信息${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     if [ ! -f "$WG_DIR/wg0.conf" ]; then
         log_error "未找到服务器配置"
         echo
@@ -774,7 +1072,7 @@ show_server_info() {
         break_end
         return 1
     fi
-    
+
     # 显示服务器公钥
     echo "【服务器信息】"
     if [ -f "$WG_DIR/server.pub" ]; then
@@ -784,36 +1082,36 @@ show_server_info() {
         log_warn "服务器公钥文件不存在"
     fi
     echo
-    
+
     # 显示监听配置
     echo "【监听配置】"
     if grep -q "ListenPort" "$WG_DIR/wg0.conf"; then
         port=$(grep "ListenPort" "$WG_DIR/wg0.conf" | awk '{print $3}')
         log_info "监听端口: UDP $port"
     fi
-    
+
     if grep -q "Address" "$WG_DIR/wg0.conf"; then
         addr=$(grep "Address" "$WG_DIR/wg0.conf" | head -1 | awk '{print $3}')
         log_info "隧道地址: $addr"
     fi
     echo
-    
+
     # 显示客户端列表
     echo "【已添加的客户端】"
     if grep -q "\[Peer\]" "$WG_DIR/wg0.conf"; then
         peer_count=$(grep -c "\[Peer\]" "$WG_DIR/wg0.conf")
         echo "客户端数量: $peer_count"
         echo
-        
+
         # 提取每个客户端的信息
-        awk '/\[Peer\]/{flag=1; count++; print "客户端 " count ":"} 
-             flag && /PublicKey/{print "  公钥: " $3} 
+        awk '/\[Peer\]/{flag=1; count++; print "客户端 " count ":"}
+             flag && /PublicKey/{print "  公钥: " $3}
              flag && /AllowedIPs/{print "  IP: " $3; flag=0}' "$WG_DIR/wg0.conf"
     else
         echo "暂无客户端"
     fi
     echo
-    
+
     # 显示 NAT 配置
     echo "【NAT 配置】"
     if [ -f /etc/nftables.conf ]; then
@@ -831,7 +1129,7 @@ show_server_info() {
         log_warn "nftables 配置文件不存在"
     fi
     echo
-    
+
     # 显示连接状态
     echo "【连接状态】"
     if wg show wg0 >/dev/null 2>&1; then
@@ -842,13 +1140,13 @@ show_server_info() {
         log_warn "WireGuard 未运行"
     fi
     echo
-    
+
     # 显示给客户端的配置信息
     echo "【客户端需要的信息】"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "请将以下信息提供给客户端："
     echo
-    
+
     # 获取服务器 IPv6 地址
     echo "1. 服务器 IPv6 地址:"
     DEF_IF=$(detect_interface)
@@ -861,13 +1159,13 @@ show_server_info() {
         fi
     fi
     echo
-    
+
     echo "2. 服务器公钥:"
     if [ -f "$WG_DIR/server.pub" ]; then
         echo -e "   ${yellow}$(cat $WG_DIR/server.pub)${re}"
     fi
     echo
-    
+
     echo "3. 监听端口:"
     if grep -q "ListenPort" "$WG_DIR/wg0.conf"; then
         port=$(grep "ListenPort" "$WG_DIR/wg0.conf" | awk '{print $3}')
@@ -875,7 +1173,7 @@ show_server_info() {
     fi
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo
-    
+
     break_end
 }
 
@@ -886,7 +1184,7 @@ show_client_info() {
     echo -e "${blue}  客户端配置信息${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     if [ ! -f "$WG_DIR/wg0.conf" ]; then
         log_error "未找到客户端配置"
         echo
@@ -895,7 +1193,7 @@ show_client_info() {
         break_end
         return 1
     fi
-    
+
     # 显示客户端公钥
     echo "【客户端信息】"
     if [ -f "$WG_DIR/client.pub" ]; then
@@ -905,20 +1203,20 @@ show_client_info() {
         log_warn "客户端公钥文件不存在"
     fi
     echo
-    
+
     # 显示隧道配置
     echo "【隧道配置】"
     if grep -q "Address" "$WG_DIR/wg0.conf"; then
         addr=$(grep "Address" "$WG_DIR/wg0.conf" | awk '{print $3}')
         log_info "隧道地址: $addr"
     fi
-    
+
     if grep -q "Endpoint" "$WG_DIR/wg0.conf"; then
         endpoint=$(grep "Endpoint" "$WG_DIR/wg0.conf" | awk '{print $3}')
         log_info "服务器端点: $endpoint"
     fi
     echo
-    
+
     # 显示分流域名
     echo "【分流域名配置】"
     if [ -f "$WG_DIR/domains.txt" ]; then
@@ -934,7 +1232,7 @@ show_client_info() {
         log_warn "域名列表文件不存在"
     fi
     echo
-    
+
     # 显示策略路由
     echo "【策略路由】"
     if ip rule show 2>/dev/null | grep -q "fwmark $FW_MARK"; then
@@ -943,7 +1241,7 @@ show_client_info() {
     else
         log_warn "策略路由规则: 未配置"
     fi
-    
+
     if ip route show table $RT_NAME 2>/dev/null | grep -q "default"; then
         log_info "路由表 $RT_NAME: 已配置"
         ip route show table $RT_NAME | head -3
@@ -951,7 +1249,7 @@ show_client_info() {
         log_warn "路由表 $RT_NAME: 未配置"
     fi
     echo
-    
+
     # 显示 nftables 规则
     echo "【流量标记规则】"
     if nft list set inet $NFT_TABLE $NFT_SET 2>/dev/null | grep -q "type ipv4_addr"; then
@@ -966,7 +1264,7 @@ show_client_info() {
         log_warn "nftables IP 集合: 未配置"
     fi
     echo
-    
+
     # 显示 DNS 配置
     echo "【DNS 配置】"
     if [ -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
@@ -980,7 +1278,7 @@ show_client_info() {
         log_warn "dnsmasq 配置: 不存在"
     fi
     echo
-    
+
     # 显示连接状态
     echo "【连接状态】"
     if wg show wg0 >/dev/null 2>&1; then
@@ -997,7 +1295,7 @@ show_client_info() {
         log_warn "WireGuard: 未运行"
     fi
     echo
-    
+
     # 测试连通性
     echo "【连通性测试】"
     if command -v curl >/dev/null 2>&1; then
@@ -1009,7 +1307,7 @@ show_client_info() {
         else
             echo -e "${red}失败${re}"
         fi
-        
+
         echo -n "测试 IPv6 出口... "
         ipv6=$(timeout 5 curl -6 -s ip.sb 2>/dev/null)
         if [ -n "$ipv6" ]; then
@@ -1022,7 +1320,7 @@ show_client_info() {
         log_warn "curl 未安装，跳过测试"
     fi
     echo
-    
+
     break_end
 }
 
@@ -1033,7 +1331,7 @@ show_status() {
     echo -e "${blue}  系统状态${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     echo "【WireGuard 状态】"
     if wg show wg0 >/dev/null 2>&1; then
         log_info "WireGuard 运行中"
@@ -1042,7 +1340,7 @@ show_status() {
         log_error "WireGuard 未运行"
     fi
     echo
-    
+
     echo "【nftables 状态】"
     if nft list ruleset >/dev/null 2>&1; then
         log_info "nftables 运行中"
@@ -1056,7 +1354,7 @@ show_status() {
         log_error "nftables 未运行"
     fi
     echo
-    
+
     if [ -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
         echo "【dnsmasq 状态】"
         if pgrep -x dnsmasq >/dev/null 2>&1; then
@@ -1068,7 +1366,7 @@ show_status() {
         fi
         echo
     fi
-    
+
     echo "【连通性测试】"
     if command -v curl >/dev/null 2>&1; then
         echo -n "IPv4 出口: "
@@ -1078,7 +1376,7 @@ show_status() {
     else
         echo "curl 未安装，跳过测试"
     fi
-    
+
     echo
     break_end
 }
@@ -1090,9 +1388,9 @@ start_service() {
     echo -e "${blue}  启动服务${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     detect_os >/dev/null 2>&1
-    
+
     log_step "启动 nftables..."
     case $OS in
         debian|ubuntu)
@@ -1102,7 +1400,7 @@ start_service() {
             rc-service nftables start 2>/dev/null && log_info "nftables 已启动" || log_warn "nftables 启动失败"
             ;;
     esac
-    
+
     log_step "启动 WireGuard..."
     case $OS in
         debian|ubuntu)
@@ -1112,7 +1410,7 @@ start_service() {
             rc-service wg-quick.$WG_IF start 2>/dev/null && log_info "WireGuard 已启动" || log_warn "WireGuard 启动失败"
             ;;
     esac
-    
+
     if [ -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
         log_step "启动 dnsmasq..."
         case $OS in
@@ -1124,14 +1422,14 @@ start_service() {
                 ;;
         esac
     fi
-    
+
     sleep 2
     if [ -f "$WG_DIR/wg0.conf" ] && grep -q "Peer" "$WG_DIR/wg0.conf" 2>/dev/null; then
         log_step "设置策略路由..."
         ip route replace default dev $WG_IF table $RT_NAME 2>/dev/null || true
         ip rule add fwmark $FW_MARK table $RT_NAME 2>/dev/null || true
     fi
-    
+
     echo
     log_info "服务启动完成！"
     break_end
@@ -1144,9 +1442,9 @@ stop_service() {
     echo -e "${blue}  停止服务${re}"
     echo -e "${blue}════════════════════════════════════════${re}"
     echo
-    
+
     detect_os >/dev/null 2>&1
-    
+
     log_step "停止 dnsmasq..."
     case $OS in
         debian|ubuntu)
@@ -1156,7 +1454,7 @@ stop_service() {
             rc-service dnsmasq stop 2>/dev/null && log_info "dnsmasq 已停止" || log_warn "dnsmasq 未运行"
             ;;
     esac
-    
+
     log_step "停止 WireGuard..."
     case $OS in
         debian|ubuntu)
@@ -1166,11 +1464,11 @@ stop_service() {
             rc-service wg-quick.$WG_IF stop 2>/dev/null && log_info "WireGuard 已停止" || log_warn "WireGuard 未运行"
             ;;
     esac
-    
+
     log_step "清理策略路由..."
     ip rule del fwmark $FW_MARK table $RT_NAME 2>/dev/null || true
     log_info "策略路由已清理"
-    
+
     echo
     log_info "服务停止完成！"
     break_end
@@ -1186,16 +1484,16 @@ uninstall() {
     log_warn "此操作将完全卸载所有配置"
     echo
     read -p "确认继续？(yes/no): " confirm </dev/tty
-    
+
     if [ "$confirm" != "yes" ]; then
         log_info "取消卸载"
         break_end
         return
     fi
-    
+
     echo
     detect_os >/dev/null 2>&1
-    
+
     log_step "停止服务..."
     case $OS in
         debian|ubuntu)
@@ -1211,43 +1509,106 @@ uninstall() {
             rm -f /etc/init.d/wg-quick.$WG_IF 2>/dev/null || true
             ;;
     esac
-    
+
     log_step "删除配置文件..."
     rm -f /etc/dnsmasq.d/wg-ipv4.conf
     rm -f /etc/sysctl.d/99-wg-ipv4.conf
-    
+
     read -p "是否删除 WireGuard 配置和密钥？(yes/no): " del_wg </dev/tty
     if [ "$del_wg" = "yes" ]; then
         rm -rf "$WG_DIR"
         log_info "WireGuard 配置已删除"
     fi
-    
+
     read -p "是否删除 nftables 配置？(yes/no): " del_nft </dev/tty
     if [ "$del_nft" = "yes" ]; then
         rm -f /etc/nftables.conf
         nft flush ruleset 2>/dev/null || true
         log_info "nftables 配置已删除"
     fi
-    
+
     log_step "清理路由表..."
     sed -i "/$RT_NAME/d" /etc/iproute2/rt_tables 2>/dev/null || true
-    
+
     sysctl --system >/dev/null 2>&1
-    
+
     echo
     log_info "卸载完成！"
     break_end
     exit 0
 }
 
+# 更新脚本
+update_script() {
+    clear
+    echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
+    echo -e "${purple}  更新脚本${re}"
+    echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
+    echo
+
+    SCRIPT_URL="https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh"
+    TEMP_SCRIPT="/tmp/ipv4-proxy_latest.sh"
+
+    log_step "正在检查更新..."
+
+    # 下载最新版本
+    if curl -fsSL "$SCRIPT_URL" -o "$TEMP_SCRIPT" 2>/dev/null; then
+        log_info "下载成功"
+
+        # 获取当前脚本路径
+        CURRENT_SCRIPT="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+
+        # 比较文件
+        if diff -q "$CURRENT_SCRIPT" "$TEMP_SCRIPT" >/dev/null 2>&1; then
+            log_info "已是最新版本，无需更新"
+            rm -f "$TEMP_SCRIPT"
+        else
+            log_step "发现新版本，正在更新..."
+
+            # 备份当前脚本
+            cp "$CURRENT_SCRIPT" "${CURRENT_SCRIPT}.backup.$(date +%Y%m%d_%H%M%S)"
+            log_info "已备份当前版本"
+
+            # 替换脚本
+            cat "$TEMP_SCRIPT" > "$CURRENT_SCRIPT"
+            chmod +x "$CURRENT_SCRIPT"
+            rm -f "$TEMP_SCRIPT"
+
+            echo
+            echo -e "${green}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
+            echo -e "${green}  更新完成！${re}"
+            echo -e "${green}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
+            echo
+            echo -e "${yellow}脚本已更新到最新版本${re}"
+            echo -e "${yellow}请重新运行脚本以使用新版本${re}"
+            echo
+            echo -e "${skyblue}运行命令: ${white}$CURRENT_SCRIPT${re}"
+            echo
+            read -n 1 -s -r -p "$(echo -e ${yellow}按任意键退出...${re})" </dev/tty
+            echo
+            exit 0
+        fi
+    else
+        log_error "下载失败，请检查网络连接"
+        echo
+        echo -e "${yellow}提示：${re}"
+        echo -e "1. 检查网络连接是否正常"
+        echo -e "2. 确认 GitHub 访问是否正常"
+        echo -e "3. 如果在国内，可能需要配置代理"
+    fi
+
+    echo
+    break_end
+}
+
 # 主程序
 main() {
     check_root
-    
+
     while true; do
         show_main_menu
         read choice </dev/tty
-        
+
         case $choice in
             1) install_server ;;
             2) install_client ;;
@@ -1260,9 +1621,10 @@ main() {
             9) start_service ;;
             10) stop_service ;;
             11) uninstall ;;
-            0) 
+            99) update_script ;;
+            0)
                 clear
-                echo "感谢使用！"
+                echo -e "${green}感谢使用！${re}"
                 exit 0
                 ;;
             *)
