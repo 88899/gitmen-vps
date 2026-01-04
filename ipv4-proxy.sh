@@ -4,6 +4,35 @@
 
 set -e
 
+# 如果脚本是通过curl下载执行，则保存为原始文件名
+if [[ "${BASH_SOURCE[0]}" == "bash" ]] && [[ -t 0 ]]; then
+    # 获取原始文件名
+    SCRIPT_URL="https://raw.githubusercontent.com/88899/gitmen-vps/main/ipv4-proxy.sh"
+    SCRIPT_NAME="ipv4-proxy.sh"
+    
+    # 确定保存目录（优先使用当前目录，如果不可写则使用/root）
+    if [ -w "." ]; then
+        SCRIPT_DIR="$(pwd)"
+    else
+        SCRIPT_DIR="/root"
+        mkdir -p "$SCRIPT_DIR" 2>/dev/null || true
+    fi
+    
+    SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_NAME"
+    
+    # 下载并保存为原始文件名
+    if curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_PATH" 2>/dev/null; then
+        chmod +x "$SCRIPT_PATH"
+        echo -e "\033[1;32m脚本已保存为: $SCRIPT_PATH\033[0m"
+        echo -e "\033[1;33m正在执行脚本...\033[0m"
+        sleep 1
+        exec "$SCRIPT_PATH" "$@"
+    else
+        echo -e "\033[1;31m下载失败，请检查网络连接\033[0m"
+        exit 1
+    fi
+fi
+
 # 参数解析
 if [ $# -gt 0 ]; then
     case $1 in
@@ -183,33 +212,44 @@ break_end() {
 
 # 打印三列菜单（表格样式）
 print_three_columns() {
-    # 创建临时文件存储内容
-    local temp_file=$(mktemp)
+    # 使用更精确的方法处理对齐
+    local col1="$1"
+    local col2="$2"
+    local col3="$3"
     
-    # 写入内容到临时文件
-    echo -e "$1|$2|$3" > "$temp_file"
+    # 移除颜色标记计算实际文本长度
+    local len1=$(echo -e "$col1" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
+    local len2=$(echo -e "$col2" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
+    local len3=$(echo -e "$col3" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
     
-    # 使用 column 命令格式化表格，并处理颜色标记
-    if command -v column >/dev/null 2>&1; then
-        # 先使用 column 格式化
-        column -t -s'|' "$temp_file" 2>/dev/null
+    # 计算需要的填充空格数
+    local pad1=$((35 - len1))
+    local pad2=$((35 - len2))
+    
+    # 如果第三列为空，则只显示两列
+    if [ -z "$col3" ]; then
+        printf "%s%*s%s%*s\n" "$col1" $pad1 "" "$col2" $pad2 ""
     else
-        # 如果 column 命令不可用，使用 printf
-        # 移除颜色标记计算长度
-        local col1=$(echo -e "$1" | sed 's/\x1b\[[0-9;]*m//g')
-        local col2=$(echo -e "$2" | sed 's/\x1b\[[0-9;]*m//g')
-        local col3=$(echo -e "$3" | sed 's/\x1b\[[0-9;]*m//g')
-        
-        # 如果第三列为空，则只显示两列
-        if [ -z "$col3" ]; then
-            printf "%-35s %-35s\n" "$1" "$2"
-        else
-            printf "%-30s %-30s %-30s\n" "$1" "$2" "$3"
-        fi
+        local pad3=$((35 - len3))
+        printf "%s%*s%s%*s%s%*s\n" "$col1" $pad1 "" "$col2" $pad2 "" "$col3" $pad3 ""
     fi
+}
+
+# 打印两列菜单（表格样式）
+print_two_columns() {
+    # 使用更精确的方法处理对齐
+    local col1="$1"
+    local col2="$2"
     
-    # 删除临时文件
-    rm -f "$temp_file"
+    # 移除颜色标记计算实际文本长度
+    local len1=$(echo -e "$col1" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
+    local len2=$(echo -e "$col2" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
+    
+    # 计算需要的填充空格数
+    local pad1=$((45 - len1))
+    
+    # 显示两列
+    printf "%s%*s%s\n" "$col1" $pad1 "" "$col2"
 }
 
 # 检查 root 权限
@@ -290,22 +330,22 @@ show_main_menu() {
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo ""
     
-    # 使用echo命令直接输出菜单，避免printf处理颜色标记的问题
+    # 使用新的对齐函数显示菜单
     echo -e "${purple}【安装部署】${re}"
-    echo -e "  ${green}1.${re} 安装服务器端 ${skyblue}(有IPv4的VPS)${re}   ${green}2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}   ${green}3.${re} 添加客户端到服务器${re}"
+    print_three_columns "${green}1.${re} 安装服务器端 ${skyblue}(有IPv4的VPS)${re}" "${green}2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}" "${green}3.${re} 添加客户端到服务器${re}"
     echo ""
     
     echo -e "${purple}【检测查看】${re}"
-    echo -e "  ${green}4.${re} 检测系统环境${re}                        ${green}5.${re} 查看服务器配置${re}                        ${green}6.${re} 查看客户端配置${re}"
+    print_three_columns "${green}4.${re} 检测系统环境${re}" "${green}5.${re} 查看服务器配置${re}" "${green}6.${re} 查看客户端配置${re}"
     echo ""
     
     echo -e "${purple}【管理维护】${re}"
-    echo -e "  ${green}7.${re} 管理分流域名${re}                        ${green}8.${re} 查看运行状态${re}                        ${green}9.${re} 启动服务${re}"
-    echo -e "  ${green}10.${re} 停止服务${re}                           ${red}11.${re} 卸载${re}"
+    print_three_columns "${green}7.${re} 管理分流域名${re}" "${green}8.${re} 查看运行状态${re}" "${green}9.${re} 启动服务${re}"
+    print_two_columns "${green}10.${re} 停止服务${re}" "${red}11.${re} 卸载${re}"
     echo ""
     
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
-    echo -e "  ${green}0.${re} 退出脚本${re}                              ${skyblue}99.${re} 更新脚本${re}"
+    print_two_columns "${green}0.${re} 退出脚本${re}" "${skyblue}99.${re} 更新脚本${re}"
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo -n -e "${red}请输入你的选择 [0-11/99]: ${re}"
 }
@@ -1608,6 +1648,12 @@ update_script() {
         SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
         CURRENT_SCRIPT="$SCRIPT_DIR/$SCRIPT_NAME"
+        
+        # 如果当前文件名不是原始文件名，则使用原始文件名
+        if [ "$SCRIPT_NAME" != "ipv4-proxy.sh" ]; then
+            CURRENT_SCRIPT="$SCRIPT_DIR/ipv4-proxy.sh"
+            SCRIPT_NAME="ipv4-proxy.sh"
+        fi
 
         # 比较文件
         if diff -q "$CURRENT_SCRIPT" "$TEMP_SCRIPT" >/dev/null 2>&1; then
@@ -1621,11 +1667,8 @@ update_script() {
             chmod +x "$CURRENT_SCRIPT"
             rm -f "$TEMP_SCRIPT"
             
-            # 如果脚本被重命名为main，则重命名回原始名称
-            if [ "$SCRIPT_NAME" != "main" ] && [ -f "$SCRIPT_DIR/main" ] && [ ! -f "$SCRIPT_DIR/$SCRIPT_NAME" ]; then
-                mv "$SCRIPT_DIR/main" "$SCRIPT_DIR/$SCRIPT_NAME"
-                CURRENT_SCRIPT="$SCRIPT_DIR/$SCRIPT_NAME"
-            fi
+            # 不需要重命名，直接使用当前文件名
+            # 这样无论是原始文件名还是main，都会正确更新
 
             echo
             echo -e "${green}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
