@@ -108,15 +108,28 @@ if [ $# -gt 0 ]; then
     esac
 fi
 
-# 颜色定义
-re='\033[0m'
-red='\033[1;91m'
-green='\033[1;32m'
-yellow='\033[1;33m'
-blue='\033[1;34m'
-purple='\033[1;35m'
-skyblue='\033[1;96m'
-white='\033[1;97m'
+# 检测终端是否支持颜色
+if [ -t 1 ] && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
+    # 支持颜色
+    re='\033[0m'
+    red='\033[1;91m'
+    green='\033[1;32m'
+    yellow='\033[1;33m'
+    blue='\033[1;34m'
+    purple='\033[1;35m'
+    skyblue='\033[1;96m'
+    white='\033[1;97m'
+else
+    # 不支持颜色，禁用
+    re=''
+    red=''
+    green=''
+    yellow=''
+    blue=''
+    purple=''
+    skyblue=''
+    white=''
+fi
 
 # 配置
 WG_IF="wg0"
@@ -170,7 +183,8 @@ break_end() {
 
 # 打印三列菜单（表格样式）
 print_three_columns() {
-    local col_width=35
+    local cols=$(tput cols 2>/dev/null || echo 80)
+    local col_width=$(( (cols - 6) / 3 ))
     printf "%-${col_width}s %-${col_width}s %-${col_width}s\n" "$1" "$2" "$3"
 }
 
@@ -1572,10 +1586,6 @@ update_script() {
             rm -f "$TEMP_SCRIPT"
         else
             log_step "发现新版本，正在更新..."
-
-            # 备份当前脚本
-            cp "$CURRENT_SCRIPT" "${CURRENT_SCRIPT}.backup.$(date +%Y%m%d_%H%M%S)"
-            log_info "已备份当前版本"
 
             # 替换脚本
             cat "$TEMP_SCRIPT" > "$CURRENT_SCRIPT"
