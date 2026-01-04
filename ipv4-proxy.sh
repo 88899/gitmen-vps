@@ -218,20 +218,20 @@ print_three_columns() {
     local col3="$3"
     
     # 移除颜色标记计算实际文本长度
-    local len1=$(echo -e "$col1" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
-    local len2=$(echo -e "$col2" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
-    local len3=$(echo -e "$col3" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
+    local len1=$(echo -e "$col1" | sed 's/\x1b\[[0-9;]*m//g' | wc -m)
+    local len2=$(echo -e "$col2" | sed 's/\x1b\[[0-9;]*m//g' | wc -m)
+    local len3=$(echo -e "$col3" | sed 's/\x1b\[[0-9;]*m//g' | wc -m)
     
     # 计算需要的填充空格数
-    local pad1=$((35 - len1))
-    local pad2=$((35 - len2))
+    local pad1=$((40 - len1))
+    local pad2=$((40 - len2))
     
     # 如果第三列为空，则只显示两列
     if [ -z "$col3" ]; then
-        printf "%s%*s%s%*s\n" "$col1" $pad1 "" "$col2" $pad2 ""
+        printf "  %s%*s%s\n" "$col1" $pad1 "" "$col2"
     else
-        local pad3=$((35 - len3))
-        printf "%s%*s%s%*s%s%*s\n" "$col1" $pad1 "" "$col2" $pad2 "" "$col3" $pad3 ""
+        local pad3=$((40 - len3))
+        printf "  %s%*s%s%*s%s\n" "$col1" $pad1 "" "$col2" $pad2 "" "$col3"
     fi
 }
 
@@ -242,14 +242,13 @@ print_two_columns() {
     local col2="$2"
     
     # 移除颜色标记计算实际文本长度
-    local len1=$(echo -e "$col1" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
-    local len2=$(echo -e "$col2" | sed 's/\x1b\[[0-9;]*m//g' | wc -c)
+    local len1=$(echo -e "$col1" | sed 's/\x1b\[[0-9;]*m//g' | wc -m)
     
     # 计算需要的填充空格数
-    local pad1=$((45 - len1))
+    local pad1=$((60 - len1))
     
     # 显示两列
-    printf "%s%*s%s\n" "$col1" $pad1 "" "$col2"
+    printf "  %s%*s%s\n" "$col1" $pad1 "" "$col2"
 }
 
 # 检查 root 权限
@@ -330,22 +329,22 @@ show_main_menu() {
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo ""
     
-    # 使用新的对齐函数显示菜单
+    # 使用分隔线和精确对齐的菜单布局
     echo -e "${purple}【安装部署】${re}"
-    print_three_columns "${green}1.${re} 安装服务器端 ${skyblue}(有IPv4的VPS)${re}" "${green}2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}" "${green}3.${re} 添加客户端到服务器${re}"
+    echo -e "${green} 1.${re} 安装服务器端 ${skyblue}(有IPv4的VPS)${re}            ${green} 2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}            ${green} 3.${re} 添加客户端到服务器${re}"
     echo ""
     
     echo -e "${purple}【检测查看】${re}"
-    print_three_columns "${green}4.${re} 检测系统环境${re}" "${green}5.${re} 查看服务器配置${re}" "${green}6.${re} 查看客户端配置${re}"
+    echo -e "${green} 4.${re} 检测系统环境${re}                                 ${green} 5.${re} 查看服务器配置${re}                                 ${green} 6.${re} 查看客户端配置${re}"
     echo ""
     
     echo -e "${purple}【管理维护】${re}"
-    print_three_columns "${green}7.${re} 管理分流域名${re}" "${green}8.${re} 查看运行状态${re}" "${green}9.${re} 启动服务${re}"
-    print_two_columns "${green}10.${re} 停止服务${re}" "${red}11.${re} 卸载${re}"
+    echo -e "${green} 7.${re} 管理分流域名${re}                                 ${green} 8.${re} 查看运行状态${re}                                 ${green} 9.${re} 启动服务${re}"
+    echo -e "${green}10.${re} 停止服务${re}                                     ${red}11.${re} 卸载${re}"
     echo ""
     
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
-    print_two_columns "${green}0.${re} 退出脚本${re}" "${skyblue}99.${re} 更新脚本${re}"
+    echo -e "${green} 0.${re} 退出脚本${re}                                       ${skyblue}99.${re} 更新脚本${re}"
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo -n -e "${red}请输入你的选择 [0-11/99]: ${re}"
 }
