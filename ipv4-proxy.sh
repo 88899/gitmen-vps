@@ -329,25 +329,30 @@ show_main_menu() {
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo ""
     
-    # 使用两列布局，确保对齐
+    # 使用单列布局，避免对齐问题
     echo -e "${purple}【安装部署】${re}"
-    echo -e "${green} 1.${re} 安装服务器端 ${skyblue}(有IPv4的VPS)${re}          ${green} 2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}"
-    echo -e "${green} 3.${re} 添加客户端到服务器${re}"
+    echo -e "${green}1.${re} 安装服务器端 ${skyblue}(有IPv4的VPS)${re}"
+    echo -e "${green}2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}"
+    echo -e "${green}3.${re} 添加客户端到服务器${re}"
     echo ""
     
     echo -e "${purple}【检测查看】${re}"
-    echo -e "${green} 4.${re} 检测系统环境${re}                           ${green} 5.${re} 查看服务器配置${re}"
-    echo -e "${green} 6.${re} 查看客户端配置${re}"
+    echo -e "${green}4.${re} 检测系统环境${re}"
+    echo -e "${green}5.${re} 查看服务器配置${re}"
+    echo -e "${green}6.${re} 查看客户端配置${re}"
     echo ""
     
     echo -e "${purple}【管理维护】${re}"
-    echo -e "${green} 7.${re} 管理分流域名${re}                           ${green} 8.${re} 查看运行状态${re}"
-    echo -e "${green} 9.${re} 启动服务${re}                             ${green}10.${re} 停止服务${re}"
+    echo -e "${green}7.${re} 管理分流域名${re}"
+    echo -e "${green}8.${re} 查看运行状态${re}"
+    echo -e "${green}9.${re} 启动服务${re}"
+    echo -e "${green}10.${re} 停止服务${re}"
     echo -e "${red}11.${re} 卸载${re}"
     echo ""
     
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
-    echo -e "${green} 0.${re} 退出脚本${re}                             ${skyblue}99.${re} 更新脚本${re}"
+    echo -e "${green}0.${re} 退出脚本${re}"
+    echo -e "${skyblue}99.${re} 更新脚本${re}"
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo -n -e "${red}请输入你的选择 [0-11/99]: ${re}"
 }
