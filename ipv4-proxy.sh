@@ -1,6 +1,6 @@
 #!/bin/bash
-# IPv4 借用工具 - 统一入口脚本
-# 让 IPv6-only VPS 通过 WireGuard 隧道借用其他 VPS 的 IPv4 访问能力
+# IPv4 代理工具 - 统一入口脚本
+# 让 IPv6-only VPS 通过 WireGuard 隧道代理其他 VPS 的 IPv4 访问能力
 
 set -e
 
@@ -137,8 +137,8 @@ show_main_menu() {
     echo -e "${skyblue}  ██║██║      ╚████╔╝      ██║    ██║     ██║  ██║╚██████╔╝██╔╝ ██╗   ██║   ${re}"
     echo -e "${skyblue}  ╚═╝╚═╝       ╚═══╝       ╚═╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ${re}"
     echo ""
-    echo -e "                    ${yellow}IPv4 借用工具 v1.0.0${re}"
-    echo -e "        ${white}让 IPv6-only VPS 通过 WireGuard 借用 IPv4 网络${re}"
+    echo -e "                    ${yellow}IPv4 代理工具 v1.0.0${re}"
+    echo -e "        ${white}让 IPv6-only VPS 通过 WireGuard 代理 IPv4 网络${re}"
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo ""
     echo -e "${purple}【安装部署】${re}"
@@ -263,7 +263,7 @@ EOF
     echo "1. 在客户端 VPS 上运行此脚本，选择菜单 2"
     echo "2. 获取客户端公钥后，回到本机选择菜单 3 添加客户端"
     echo
-    read -p "按回车键返回主菜单..." </dev/tty
+    break_end
 }
 
 # 安装客户端
@@ -277,7 +277,7 @@ install_client() {
     read -p "请输入服务器的 IPv6 地址: " SERVER_IPV6 </dev/tty
     if [ -z "$SERVER_IPV6" ]; then
         log_error "服务器 IPv6 地址不能为空"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
@@ -287,7 +287,7 @@ install_client() {
     read -p "请输入服务器公钥: " SERVER_PUBKEY </dev/tty
     if [ -z "$SERVER_PUBKEY" ]; then
         log_error "服务器公钥不能为空"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
@@ -422,7 +422,7 @@ EOF
     echo "下一步："
     echo "在服务器上运行此脚本，选择菜单 3，输入上面的公钥"
     echo
-    read -p "按回车键返回主菜单..." </dev/tty
+    break_end
 }
 
 # 添加客户端到服务器
@@ -435,14 +435,14 @@ add_client() {
     
     if [ ! -f "$WG_DIR/wg0.conf" ]; then
         log_error "未找到服务器配置，请先安装服务器端（菜单 1）"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
     read -p "请输入客户端公钥: " CLIENT_PUBKEY </dev/tty
     if [ -z "$CLIENT_PUBKEY" ]; then
         log_error "客户端公钥不能为空"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
@@ -488,7 +488,7 @@ EOF
     echo "当前连接的客户端："
     wg show wg0 peers 2>/dev/null || echo "  暂无连接"
     echo
-    read -p "按回车键返回主菜单..." </dev/tty
+    break_end
 }
 
 # 管理域名菜单
@@ -527,7 +527,7 @@ list_domains() {
     
     if [ ! -f "$WG_DIR/domains.txt" ]; then
         log_error "域名列表文件不存在"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
@@ -535,7 +535,7 @@ list_domains() {
     echo
     echo "总计: $(grep -v "^#" "$WG_DIR/domains.txt" | grep -v "^$" | wc -l) 个域名"
     echo
-    read -p "按回车键返回..." </dev/tty
+    break_end
 }
 
 # 添加域名
@@ -548,14 +548,14 @@ add_domain() {
     
     if [ ! -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
         log_error "dnsmasq 配置不存在，请先安装客户端（菜单 2）"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
     read -p "请输入要添加的域名（多个用空格分隔）: " domains </dev/tty
     if [ -z "$domains" ]; then
         log_error "域名不能为空"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
@@ -584,7 +584,7 @@ add_domain() {
     
     echo
     log_info "域名添加完成！"
-    read -p "按回车键返回..." </dev/tty
+    break_end
 }
 
 # 删除域名
@@ -597,14 +597,14 @@ remove_domain() {
     
     if [ ! -f /etc/dnsmasq.d/wg-ipv4.conf ]; then
         log_error "dnsmasq 配置不存在"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
     read -p "请输入要删除的域名（多个用空格分隔）: " domains </dev/tty
     if [ -z "$domains" ]; then
         log_error "域名不能为空"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
@@ -629,7 +629,7 @@ remove_domain() {
     
     echo
     log_info "域名删除完成！"
-    read -p "按回车键返回..." </dev/tty
+    break_end
 }
 
 # 检测系统环境
@@ -755,7 +755,7 @@ check_environment() {
     fi
     echo
     
-    read -p "按回车键返回主菜单..." </dev/tty
+    break_end
 }
 
 # 查看服务器配置信息
@@ -771,7 +771,7 @@ show_server_info() {
         echo
         echo "请先安装服务器端（菜单 1）"
         echo
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
@@ -876,7 +876,7 @@ show_server_info() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo
     
-    read -p "按回车键返回主菜单..." </dev/tty
+    break_end
 }
 
 # 查看客户端配置信息
@@ -892,7 +892,7 @@ show_client_info() {
         echo
         echo "请先安装客户端（菜单 2）"
         echo
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return 1
     fi
     
@@ -1023,7 +1023,7 @@ show_client_info() {
     fi
     echo
     
-    read -p "按回车键返回主菜单..." </dev/tty
+    break_end
 }
 
 # 查看状态
@@ -1080,7 +1080,7 @@ show_status() {
     fi
     
     echo
-    read -p "按回车键返回主菜单..." </dev/tty
+    break_end
 }
 
 # 启动服务
@@ -1134,7 +1134,7 @@ start_service() {
     
     echo
     log_info "服务启动完成！"
-    read -p "按回车键返回主菜单..." </dev/tty
+    break_end
 }
 
 # 停止服务
@@ -1173,14 +1173,14 @@ stop_service() {
     
     echo
     log_info "服务停止完成！"
-    read -p "按回车键返回主菜单..." </dev/tty
+    break_end
 }
 
 # 卸载
 uninstall() {
     clear
     echo -e "${red}════════════════════════════════════════${re}"
-    echo -e "${red}  卸载 IPv4 借用工具${re}"
+    echo -e "${red}  卸载 IPv4 代理工具${re}"
     echo -e "${red}════════════════════════════════════════${re}"
     echo
     log_warn "此操作将完全卸载所有配置"
@@ -1189,7 +1189,7 @@ uninstall() {
     
     if [ "$confirm" != "yes" ]; then
         log_info "取消卸载"
-        read -p "按回车键返回..." </dev/tty
+        break_end
         return
     fi
     
@@ -1236,7 +1236,7 @@ uninstall() {
     
     echo
     log_info "卸载完成！"
-    read -p "按回车键退出..." </dev/tty
+    break_end
     exit 0
 }
 

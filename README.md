@@ -1,6 +1,6 @@
-# IPv4 借用工具
+# IPv4 代理工具
 
-让 IPv6-only VPS 通过 WireGuard 隧道借用其他 VPS 的 IPv4 访问能力。
+让 IPv6-only VPS 通过 WireGuard 隧道代理其他 VPS 的 IPv4 访问能力。
 
 ## 快速开始
 
