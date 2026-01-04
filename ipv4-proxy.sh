@@ -183,19 +183,33 @@ break_end() {
 
 # 打印三列菜单（表格样式）
 print_three_columns() {
-    # 移除颜色标记以便计算宽度
-    local col1=$(echo -e "$1" | sed 's/\x1b\[[0-9;]*m//g')
-    local col2=$(echo -e "$2" | sed 's/\x1b\[[0-9;]*m//g')
-    local col3=$(echo -e "$3" | sed 's/\x1b\[[0-9;]*m//g')
+    # 创建临时文件存储内容
+    local temp_file=$(mktemp)
     
-    # 如果第三列为空，则只显示两列
-    if [ -z "$col3" ]; then
-        # 使用 printf 进行格式化，确保左对齐
-        printf "%-45s %-45s\n" "$1" "$2"
+    # 写入内容到临时文件
+    echo -e "$1|$2|$3" > "$temp_file"
+    
+    # 使用 column 命令格式化表格，并处理颜色标记
+    if command -v column >/dev/null 2>&1; then
+        # 先使用 column 格式化
+        column -t -s'|' "$temp_file" 2>/dev/null
     else
-        # 使用 column 命令进行表格化，如果失败则使用 printf
-        echo -e "$1|$2|$3" | column -t -s'|' 2>/dev/null || printf "%-30s %-30s %-30s\n" "$1" "$2" "$3"
+        # 如果 column 命令不可用，使用 printf
+        # 移除颜色标记计算长度
+        local col1=$(echo -e "$1" | sed 's/\x1b\[[0-9;]*m//g')
+        local col2=$(echo -e "$2" | sed 's/\x1b\[[0-9;]*m//g')
+        local col3=$(echo -e "$3" | sed 's/\x1b\[[0-9;]*m//g')
+        
+        # 如果第三列为空，则只显示两列
+        if [ -z "$col3" ]; then
+            printf "%-35s %-35s\n" "$1" "$2"
+        else
+            printf "%-30s %-30s %-30s\n" "$1" "$2" "$3"
+        fi
     fi
+    
+    # 删除临时文件
+    rm -f "$temp_file"
 }
 
 # 检查 root 权限
@@ -275,18 +289,36 @@ show_main_menu() {
     echo -e "        ${white}让 IPv6-only VPS 通过 WireGuard 代理 IPv4 网络${re}"
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo ""
+    
+    # 使用自定义表格显示菜单
     echo -e "${purple}【安装部署】${re}"
-    print_three_columns "${green} 1.${re} 安装服务器端 ${skyblue}(有 IPv4 的 VPS)${re}" "${green} 2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}" "${green} 3.${re} 添加客户端到服务器${re}"
+    printf "  %-35s %-35s %-35s\n" \
+        "${green}1.${re} 安装服务器端 ${skyblue}(有IPv4的VPS)${re}" \
+        "${green}2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}" \
+        "${green}3.${re} 添加客户端到服务器${re}"
     echo ""
+    
     echo -e "${purple}【检测查看】${re}"
-    print_three_columns "${green} 4.${re} 检测系统环境${re}" "${green} 5.${re} 查看服务器配置${re}" "${green} 6.${re} 查看客户端配置${re}"
+    printf "  %-35s %-35s %-35s\n" \
+        "${green}4.${re} 检测系统环境${re}" \
+        "${green}5.${re} 查看服务器配置${re}" \
+        "${green}6.${re} 查看客户端配置${re}"
     echo ""
+    
     echo -e "${purple}【管理维护】${re}"
-    print_three_columns "${green} 7.${re} 管理分流域名${re}" "${green} 8.${re} 查看运行状态${re}" "${green} 9.${re} 启动服务${re}"
-    print_three_columns "${green}10.${re} 停止服务${re}" "${red}11.${re} 卸载${re}" ""
+    printf "  %-35s %-35s %-35s\n" \
+        "${green}7.${re} 管理分流域名${re}" \
+        "${green}8.${re} 查看运行状态${re}" \
+        "${green}9.${re} 启动服务${re}"
+    printf "  %-35s %-35s\n" \
+        "${green}10.${re} 停止服务${re}" \
+        "${red}11.${re} 卸载${re}"
     echo ""
+    
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
-    print_three_columns "${green} 0.${re} 退出脚本${re}" "${skyblue}99.${re} 更新脚本${re}" ""
+    printf "  %-35s %-35s\n" \
+        "${green}0.${re} 退出脚本${re}" \
+        "${skyblue}99.${re} 更新脚本${re}"
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo -n -e "${red}请输入你的选择 [0-11/99]: ${re}"
 }
