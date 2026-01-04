@@ -290,35 +290,22 @@ show_main_menu() {
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo ""
     
-    # 使用自定义表格显示菜单
+    # 使用echo命令直接输出菜单，避免printf处理颜色标记的问题
     echo -e "${purple}【安装部署】${re}"
-    printf "  %-35s %-35s %-35s\n" \
-        "${green}1.${re} 安装服务器端 ${skyblue}(有IPv4的VPS)${re}" \
-        "${green}2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}" \
-        "${green}3.${re} 添加客户端到服务器${re}"
+    echo -e "  ${green}1.${re} 安装服务器端 ${skyblue}(有IPv4的VPS)${re}   ${green}2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}   ${green}3.${re} 添加客户端到服务器${re}"
     echo ""
     
     echo -e "${purple}【检测查看】${re}"
-    printf "  %-35s %-35s %-35s\n" \
-        "${green}4.${re} 检测系统环境${re}" \
-        "${green}5.${re} 查看服务器配置${re}" \
-        "${green}6.${re} 查看客户端配置${re}"
+    echo -e "  ${green}4.${re} 检测系统环境${re}                        ${green}5.${re} 查看服务器配置${re}                        ${green}6.${re} 查看客户端配置${re}"
     echo ""
     
     echo -e "${purple}【管理维护】${re}"
-    printf "  %-35s %-35s %-35s\n" \
-        "${green}7.${re} 管理分流域名${re}" \
-        "${green}8.${re} 查看运行状态${re}" \
-        "${green}9.${re} 启动服务${re}"
-    printf "  %-35s %-35s\n" \
-        "${green}10.${re} 停止服务${re}" \
-        "${red}11.${re} 卸载${re}"
+    echo -e "  ${green}7.${re} 管理分流域名${re}                        ${green}8.${re} 查看运行状态${re}                        ${green}9.${re} 启动服务${re}"
+    echo -e "  ${green}10.${re} 停止服务${re}                           ${red}11.${re} 卸载${re}"
     echo ""
     
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
-    printf "  %-35s %-35s\n" \
-        "${green}0.${re} 退出脚本${re}" \
-        "${skyblue}99.${re} 更新脚本${re}"
+    echo -e "  ${green}0.${re} 退出脚本${re}                              ${skyblue}99.${re} 更新脚本${re}"
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo -n -e "${red}请输入你的选择 [0-11/99]: ${re}"
 }
@@ -1629,10 +1616,16 @@ update_script() {
         else
             log_step "发现新版本，正在更新..."
 
-            # 替换脚本
+            # 替换脚本，确保保持原始文件名
             cat "$TEMP_SCRIPT" > "$CURRENT_SCRIPT"
             chmod +x "$CURRENT_SCRIPT"
             rm -f "$TEMP_SCRIPT"
+            
+            # 如果脚本被重命名为main，则重命名回原始名称
+            if [ "$SCRIPT_NAME" != "main" ] && [ -f "$SCRIPT_DIR/main" ] && [ ! -f "$SCRIPT_DIR/$SCRIPT_NAME" ]; then
+                mv "$SCRIPT_DIR/main" "$SCRIPT_DIR/$SCRIPT_NAME"
+                CURRENT_SCRIPT="$SCRIPT_DIR/$SCRIPT_NAME"
+            fi
 
             echo
             echo -e "${green}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
