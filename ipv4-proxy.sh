@@ -168,6 +168,11 @@ break_end() {
     echo ""
 }
 
+# 打印三列菜单（表格样式）
+print_three_columns() {
+    printf "%-50s %-50s %-50s\n" "$1" "$2" "$3"
+}
+
 # 检查 root 权限
 check_root() {
     if [ "$EUID" -ne 0 ]; then
@@ -246,17 +251,17 @@ show_main_menu() {
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo ""
     echo -e "${purple}【安装部署】${re}"
-    echo -e "${green} 1.${re} 安装服务器端 ${skyblue}(有 IPv4 的 VPS)${re}                    ${green} 2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}                    ${green} 3.${re} 添加客户端到服务器"
+    print_three_columns "${green} 1.${re} 安装服务器端 ${skyblue}(有 IPv4 的 VPS)${re}" "${green} 2.${re} 安装客户端 ${skyblue}(IPv6-only VPS)${re}" "${green} 3.${re} 添加客户端到服务器"
     echo ""
     echo -e "${purple}【检测查看】${re}"
-    echo -e "${green} 4.${re} 检测系统环境 ${skyblue}▶ 查看系统信息/软件包/配置${re}    ${green} 5.${re} 查看服务器配置 ${skyblue}▶ 公钥/端口/客户端列表/NAT${re}    ${green} 6.${re} 查看客户端配置 ${skyblue}▶ 公钥/隧道/域名/路由/连接${re}"
+    print_three_columns "${green} 4.${re} 检测系统环境 ${skyblue}▶ 查看系统信息/软件包/配置${re}" "${green} 5.${re} 查看服务器配置 ${skyblue}▶ 公钥/端口/客户端列表/NAT${re}" "${green} 6.${re} 查看客户端配置 ${skyblue}▶ 公钥/隧道/域名/路由/连接${re}"
     echo ""
     echo -e "${purple}【管理维护】${re}"
-    echo -e "${green} 7.${re} 管理分流域名 ${skyblue}▶ 添加/删除/查看${re}                ${green} 8.${re} 查看运行状态 ${skyblue}▶ WireGuard/nftables/dnsmasq${re}        ${green} 9.${re} 启动服务"
-    echo -e "${green}10.${re} 停止服务                                        ${red}11.${re} 卸载"
+    print_three_columns "${green} 7.${re} 管理分流域名 ${skyblue}▶ 添加/删除/查看${re}" "${green} 8.${re} 查看运行状态 ${skyblue}▶ WireGuard/nftables/dnsmasq${re}" "${green} 9.${re} 启动服务"
+    print_three_columns "${green}10.${re} 停止服务" "${red}11.${re} 卸载" ""
     echo ""
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
-    echo -e "${green} 0.${re} 退出脚本                                        ${skyblue}99.${re} 更新脚本"
+    print_three_columns "${green} 0.${re} 退出脚本" "${skyblue}99.${re} 更新脚本" ""
     echo -e "${white}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${re}"
     echo -n -e "${red}请输入你的选择 [0-11/99]: ${re}"
 }
@@ -1555,8 +1560,10 @@ update_script() {
     if curl -fsSL "$SCRIPT_URL" -o "$TEMP_SCRIPT" 2>/dev/null; then
         log_info "下载成功"
 
-        # 获取当前脚本路径
-        CURRENT_SCRIPT="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+    # 获取当前脚本路径
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+    CURRENT_SCRIPT="$SCRIPT_DIR/$SCRIPT_NAME"
 
         # 比较文件
         if diff -q "$CURRENT_SCRIPT" "$TEMP_SCRIPT" >/dev/null 2>&1; then
